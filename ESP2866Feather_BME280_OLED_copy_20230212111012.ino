@@ -77,10 +77,11 @@ uint32_t start;
 uint32_t stop;
 
 uint32_t sizeInBytes = 0;
-
+uint16_t r;
 float x[10];
 
 float feld[4];
+float temp;
 
 void setup() {
   // put your setup code here, to run once:
@@ -129,6 +130,34 @@ void setup() {
 
 //  FRAM
   Wire.begin();
+  Serial.println(__FILE__);
+  Serial.print("FRAM_LIB_VERSION: ");
+  Serial.println(FRAM_LIB_VERSION);
+
+  int rv = fram.begin(0x50);
+  if (rv != 0)
+  {
+    Serial.print("INIT ERROR: ");
+    Serial.println(rv);
+  }  
+
+  //read back written Values
+  uint16_t address = fram.read16(100) ;
+  Serial.println(address);  
+  if (address == 0) {
+    Serial.println("nothing to print...");
+  }
+  else { 
+   r =100;           
+   while (r < address){ 
+     for  (int i = 0; i < 4; i++)  
+     {r = fram.readObject(r,feld[i]); 
+      Serial.print(feld[i]);
+      Serial.print(";" );
+    }       
+     Serial.println();   
+   }
+  }    
   
 }
 
@@ -209,18 +238,18 @@ void FRAM_storage(float feld[]) {
 //
 // experimental
   
-  Serial.println(__FILE__);
-  Serial.print("FRAM_LIB_VERSION: ");
-  Serial.println(FRAM_LIB_VERSION);
+  // Serial.println(__FILE__);
+  // Serial.print("FRAM_LIB_VERSION: ");
+  // Serial.println(FRAM_LIB_VERSION);
 
-  Wire.begin();
+  // Wire.begin();
 
-  int rv = fram.begin(0x50);
-  if (rv != 0)
-  {
-    Serial.print("INIT ERROR: ");
-    Serial.println(rv);
-  }
+  // int rv = fram.begin(0x50);
+  // if (rv != 0)
+  // {
+  //   Serial.print("INIT ERROR: ");
+  //   Serial.println(rv);
+  // }
 
   //  FILL AND WRITE 10 FLOATS
     //uint16_t address = 100;
