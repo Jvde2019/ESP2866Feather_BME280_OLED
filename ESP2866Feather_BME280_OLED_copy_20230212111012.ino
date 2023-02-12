@@ -245,13 +245,6 @@ void FRAM_storage(float feld[]) {
   Serial.println(address);
   fram.write16(100, address);
 
-  //  CLEAR THE ARRAY
-  //for (int i = 0; i < 10; i++)
-  //{
-  //  x[i] = 0;
-  //  Serial.println(x[i], 5);
-  //}
-  //Serial.println();
 
   //  READ BACK 10 FLOATS
   // address = 100;
