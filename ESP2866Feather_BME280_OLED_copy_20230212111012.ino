@@ -31,29 +31,29 @@ Adafruit_SH1107 display = Adafruit_SH1107(64, 128, &Wire);
 
 // OLED FeatherWing buttons map to different pins depending on board:
 #if defined(ESP8266)
-  #define BUTTON_A  0
-  #define BUTTON_B 16
-  #define BUTTON_C  2
+#define BUTTON_A 0
+#define BUTTON_B 16
+#define BUTTON_C 2
 #elif defined(ESP32) && !defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S2)
-  #define BUTTON_A 15
-  #define BUTTON_B 32
-  #define BUTTON_C 14
+#define BUTTON_A 15
+#define BUTTON_B 32
+#define BUTTON_C 14
 #elif defined(ARDUINO_STM32_FEATHER)
-  #define BUTTON_A PA15
-  #define BUTTON_B PC7
-  #define BUTTON_C PC5
+#define BUTTON_A PA15
+#define BUTTON_B PC7
+#define BUTTON_C PC5
 #elif defined(TEENSYDUINO)
-  #define BUTTON_A  4
-  #define BUTTON_B  3
-  #define BUTTON_C  8
+#define BUTTON_A 4
+#define BUTTON_B 3
+#define BUTTON_C 8
 #elif defined(ARDUINO_NRF52832_FEATHER)
-  #define BUTTON_A 31
-  #define BUTTON_B 30
-  #define BUTTON_C 27
-#else // 32u4, M0, M4, nrf52840, esp32-s2 and 328p
-  #define BUTTON_A  9
-  #define BUTTON_B  6
-  #define BUTTON_C  5
+#define BUTTON_A 31
+#define BUTTON_B 30
+#define BUTTON_C 27
+#else  // 32u4, M0, M4, nrf52840, esp32-s2 and 328p
+#define BUTTON_A 9
+#define BUTTON_B 6
+#define BUTTON_C 5
 #endif
 
 //BME280
@@ -63,7 +63,7 @@ Adafruit_SH1107 display = Adafruit_SH1107(64, 128, &Wire);
 #define BME_CS 10
 
 #define SEALEVELPRESSURE_HPA (1013.25)
-Adafruit_BME280 bme; // I2C
+Adafruit_BME280 bme;  // I2C
 //Adafruit_BME280 bme(BME_CS); // hardware SPI
 //Adafruit_BME280 bme(BME_CS, BME_MOSI, BME_MISO, BME_SCK); // software SPI
 
@@ -88,8 +88,8 @@ void setup() {
   Serial.begin(115200);
 
   Serial.println("128x64 OLED FeatherWing test");
-  delay(250); // wait for the OLED to power up
-  display.begin(0x3C, true); // Address 0x3C default
+  delay(250);                 // wait for the OLED to power up
+  display.begin(0x3C, true);  // Address 0x3C default
 
   Serial.println("OLED begun");
 
@@ -105,168 +105,149 @@ void setup() {
   display.setRotation(1);
   display.setTextSize(2);
   display.setTextColor(SH110X_WHITE);
-  display.setCursor(0,0);  
-  display.println(F("BME280 test"));  
+  display.setCursor(0, 0);
+  display.println(F("BME280 test"));
 
   unsigned status;
-    
+
   // default settings
-  status = bme.begin();  
+  status = bme.begin();
   // You can also pass in a Wire library object like &Wire2
   // status = bme.begin(0x76, &Wire2)
   if (!status) {
-      Serial.println("Could not find a valid BME280 sensor, check wiring, address, sensor ID!");
-      Serial.print("SensorID was: 0x"); Serial.println(bme.sensorID(),16);
-      Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
-      Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
-      Serial.print("        ID of 0x60 represents a BME 280.\n");
-      Serial.print("        ID of 0x61 represents a BME 680.\n");
-      while (1) delay(10);  
-      }
+    Serial.println("Could not find a valid BME280 sensor, check wiring, address, sensor ID!");
+    Serial.print("SensorID was: 0x");
+    Serial.println(bme.sensorID(), 16);
+    Serial.print("        ID of 0xFF probably means a bad address, a BMP 180 or BMP 085\n");
+    Serial.print("   ID of 0x56-0x58 represents a BMP 280,\n");
+    Serial.print("        ID of 0x60 represents a BME 280.\n");
+    Serial.print("        ID of 0x61 represents a BME 680.\n");
+    while (1) delay(10);
+  }
   Serial.println("-- Default Test --");
-  delayTime = 10000;
+  delayTime = 60000;
 
-  Serial.println();  
+  Serial.println();
 
-//  FRAM
+  //  FRAM
   Wire.begin();
   Serial.println(__FILE__);
   Serial.print("FRAM_LIB_VERSION: ");
   Serial.println(FRAM_LIB_VERSION);
 
   int rv = fram.begin(0x50);
-  if (rv != 0)
-  {
+  if (rv != 0) {
     Serial.print("INIT ERROR: ");
     Serial.println(rv);
-  }  
+  }
 
   //read back written Values
-  uint16_t address = fram.read16(100) ;
-  Serial.println(address);  
+  uint16_t address = fram.read16(100);
+  Serial.println(address);
   if (address == 0) {
     Serial.println("nothing to print...");
+  } 
+  else {
+    r = 100;
+    while (r < address) {            
+      Serial.print(r);
+      Serial.print(" ");      
+      for (int i = 0; i < 4; i++) {
+        r = fram.readObject(r, feld[i]);
+        Serial.print(feld[i]);
+        Serial.print(";");
+      }
+      Serial.println();
+    }
   }
-  else { 
-   r =100;           
-   while (r < address){ 
-     for  (int i = 0; i < 4; i++)  
-     {r = fram.readObject(r,feld[i]); 
-      Serial.print(feld[i]);
-      Serial.print(";" );
-    }       
-     Serial.println();   
-   }
-  }    
-  
 }
 
 void loop() {
-    getvalues(feld);   //Values holen 
-    printValues(feld); // Values ausgeben
-    FRAM_storage(feld);    //Values speichern
-    delay(delayTime);
+  getvalues(feld);     // Values holen
+  printValues(feld);   // Values ausgeben
+  FRAM_storage(feld);  // Values speichern
+  delay(delayTime);
 }
 
-void getvalues(float feld[]){
+void getvalues(float feld[]) {
+  temp = bme.readTemperature();
+  temp = bme.readPressure() / 100.0F;
+  temp = bme.readAltitude(SEALEVELPRESSURE_HPA);
+  temp = bme.readHumidity();  
   feld[0] = bme.readTemperature();
   feld[1] = bme.readPressure() / 100.0F;
   feld[2] = bme.readAltitude(SEALEVELPRESSURE_HPA);
-  feld[3] = bme.readHumidity(); 
+  feld[3] = bme.readHumidity();
 }
 
-
 void printValues(float feld[]) {
-  //Serial Monitor    
-    Serial.print("Temperature = ");
-    //Serial.print(bme.readTemperature());        
-    Serial.print(feld[0]);    
-    Serial.println(" °C");
-    
-    Serial.print("Pressure = ");
-    //Serial.print(bme.readPressure() / 100.0F);
-    Serial.print(feld[1]);
-    Serial.println(" hPa");
+//Serial Monitor
+  Serial.print("Temperature = ");
+  //Serial.print(bme.readTemperature());
+  Serial.print(feld[0]);
+  Serial.println(" °C");
 
-    Serial.print("Approx. Altitude = ");
-    //Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
-    Serial.print(feld[2]);    
-    Serial.println(" m");
+  Serial.print("Pressure = ");
+  //Serial.print(bme.readPressure() / 100.0F);
+  Serial.print(feld[1]);
+  Serial.println(" hPa");
 
-    Serial.print("Humidity = ");
-    //Serial.print(bme.readHumidity());
-    Serial.print(feld[3]);    
-    Serial.println(" %");
-    Serial.println();
-      
-   //OLED
+  Serial.print("Approx. Altitude = ");
+  //Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
+  Serial.print(feld[2]);
+  Serial.println(" m");
+
+  Serial.print("Humidity = ");
+  //Serial.print(bme.readHumidity());
+  Serial.print(feld[3]);
+  Serial.println(" %");
+  Serial.println();
+
+//OLED
   // Clear the buffer.
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setTextColor(SH110X_WHITE);
-    display.setCursor(0,0);
-    
-    display.print("Temperatur = ");
-    //display.print(bme.readTemperature());
-    display.print(feld[0]);    
-    display.println("*C");
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SH110X_WHITE);
+  display.setCursor(0, 0);
 
-    display.print("Druck      = ");
-    //display.print(bme.readPressure() / 100.0F);
-    display.print(feld[1]);     
-    display.println(" hPa");
+  display.print("Temperatur = ");
+  display.print(feld[0]);
+  display.println("*C");
 
-    display.print("Hoehe      = ");
-    //display.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
-    display.print(feld[2]);     
-    display.println(" m");
+  display.print("Druck      = ");
+  display.print(feld[1]);
+  display.println(" hPa");
 
-    display.print("rel.Feuchte= ");
-    //display.print(bme.readHumidity());
-    display.print(feld[3]);     
-    display.println(" %");    
-    
-    display.display();
-}    
-  
+  display.print("Hoehe      = ");
+  display.print(feld[2]);
+  display.println(" m");
+
+  display.print("rel.Feuchte= ");
+  display.print(feld[3]);
+  display.println(" %");
+
+  display.display();
+}
+
 void FRAM_storage(float feld[]) {
-//
-//    FILE: FRAM_writeObject.ino
-//  AUTHOR: Rob Tillaart
-// PURPOSE: demo writing reading objects
-//     URL: https://github.com/RobTillaart/FRAM_I2C
-//
-// experimental
+  //
+  //    FILE: FRAM_writeObject.ino
+  //  AUTHOR: Rob Tillaart
+  // PURPOSE: demo writing reading objects
+  //     URL: https://github.com/RobTillaart/FRAM_I2C
+  //
+  // experimental
+
   
-  // Serial.println(__FILE__);
-  // Serial.print("FRAM_LIB_VERSION: ");
-  // Serial.println(FRAM_LIB_VERSION);
-
-  // Wire.begin();
-
-  // int rv = fram.begin(0x50);
-  // if (rv != 0)
-  // {
-  //   Serial.print("INIT ERROR: ");
-  //   Serial.println(rv);
-  // }
-
   //  FILL AND WRITE 10 FLOATS
-    //uint16_t address = 100;
-  uint16_t address = fram.read16(100) ;
-  Serial.println(address);
   
-  if (address == 0) address = 100;  
+  uint16_t address = fram.read16(100);
   Serial.println(address);
 
+  if (address == 0) address = 100;
+  Serial.println(address);
 
-
-
-
-  
-  for (int i = 0; i < 4; i++)
-  {
-    //x[i] = random(1000) / 3.14159265;
+  for (int i = 0; i < 4; i++) {
     Serial.println(feld[i], 5);
     address = fram.writeObject(address, feld[i]);
     Serial.println(address);
@@ -284,5 +265,4 @@ void FRAM_storage(float feld[]) {
   // }
   // Serial.println();
   // Serial.println("done...");
-}    
-
+}
