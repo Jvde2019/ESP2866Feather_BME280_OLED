@@ -82,6 +82,18 @@ float x[10];
 
 float feld[4];
 float temp;
+volatile boolean Menu = false;
+
+// Checks if motion was detected, sets LED HIGH and starts a timer
+IRAM_ATTR void activate_menu() {
+  Menu = !Menu;
+    if (Menu){
+    Serial.println("Menü aktiviert");
+  }
+  else{
+    Serial.println("Menü deaktiviert");
+  } 
+}
 
 void setup() {
   // put your setup code here, to run once:
@@ -98,6 +110,15 @@ void setup() {
   // internally, this will display the splashscreen.
   display.display();
   delay(1000);
+  
+
+//
+// btn A,B ;C int komm geht  -- millis k millis geht  Btn event short long
+// set bit isr zur bearbeitung in loop
+
+  pinMode(BUTTON_A, INPUT_PULLUP);
+  pinMode(BUTTON_B, INPUT_PULLUP);
+  pinMode(BUTTON_C, INPUT_PULLUP);  
 
   // Clear the buffer.
   display.clearDisplay();
@@ -139,6 +160,9 @@ void setup() {
   if (rv != 0) {
     Serial.print("INIT ERROR: ");
     Serial.println(rv);
+
+  // Interrupt Menu aktivieren deaktivieren
+  attachInterrupt(digitalPinToInterrupt(BUTTON_C), activate_menu, RISING);  
   }
 
   //read back written Values
@@ -166,6 +190,9 @@ void loop() {
   getvalues(feld);     // Values holen
   printValues(feld);   // Values ausgeben
   FRAM_storage(feld);  // Values speichern
+  if(!digitalRead(BUTTON_A)) display.print("A");
+  if(!digitalRead(BUTTON_B)) display.print("B");
+  if(!digitalRead(BUTTON_C)) display.print("C");  
   delay(delayTime);
 }
 
@@ -242,15 +269,15 @@ void FRAM_storage(float feld[]) {
   //  FILL AND WRITE 10 FLOATS
   
   uint16_t address = fram.read16(100);
-  Serial.println(address);
+  //Serial.println(address);
 
   if (address == 0) address = 100;
-  Serial.println(address);
+  //Serial.println(address);
 
   for (int i = 0; i < 4; i++) {
-    Serial.println(feld[i], 5);
+    //Serial.println(feld[i], 5);
     address = fram.writeObject(address, feld[i]);
-    Serial.println(address);
+    //Serial.println(address);
   }
   Serial.println(address);
   fram.write16(100, address);
