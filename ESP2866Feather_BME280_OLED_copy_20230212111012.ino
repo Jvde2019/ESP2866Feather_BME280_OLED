@@ -82,7 +82,11 @@ float x[10];
 
 float feld[4];
 float temp;
-volatile boolean Menu = false;
+volatile boolean Menu = true;
+
+uint32_t delay_time = 10000;
+uint32_t act_time = 0;
+uint32_t old_time =0;
 
 // Checks if motion was detected, sets LED HIGH and starts a timer
 IRAM_ATTR void activate_menu() {
@@ -160,10 +164,8 @@ void setup() {
   if (rv != 0) {
     Serial.print("INIT ERROR: ");
     Serial.println(rv);
-
-  // Interrupt Menu aktivieren deaktivieren
-  attachInterrupt(digitalPinToInterrupt(BUTTON_C), activate_menu, RISING);  
   }
+
 
   //read back written Values
   uint16_t address = fram.read16(100);
@@ -184,16 +186,29 @@ void setup() {
       Serial.println();
     }
   }
+    
+  // Interrupt Menu aktivieren deaktivieren
+  attachInterrupt(digitalPinToInterrupt(BUTTON_C), activate_menu, RISING);  
 }
 
 void loop() {
-  getvalues(feld);     // Values holen
-  printValues(feld);   // Values ausgeben
-  FRAM_storage(feld);  // Values speichern
-  if(!digitalRead(BUTTON_A)) display.print("A");
-  if(!digitalRead(BUTTON_B)) display.print("B");
-  if(!digitalRead(BUTTON_C)) display.print("C");  
-  delay(delayTime);
+  while (Menu){
+     Serial.print("Menü");  
+  }  
+  //if(!digitalRead(BUTTON_A)) Serial.print("A");
+  //if(!digitalRead(BUTTON_B)) Serial.print("B");
+  //if(!digitalRead(BUTTON_C)) Serial.print("C");  
+  //delay(delayTime);
+  act_time = millis();
+  if (act_time - old_time >= delay_time){
+    old_time = act_time;
+    Serial.print(act_time);  
+    getvalues(feld);     // Values holen
+    printValues(feld);   // Values ausgeben
+    FRAM_storage(feld);  // Values speichern
+    
+  }
+
 }
 
 void getvalues(float feld[]) {
@@ -293,3 +308,4 @@ void FRAM_storage(float feld[]) {
   // Serial.println();
   // Serial.println("done...");
 }
+
