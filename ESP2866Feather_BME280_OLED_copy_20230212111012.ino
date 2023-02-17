@@ -82,8 +82,8 @@ float x[10];
 
 float feld[4];
 float temp;
-volatile boolean Menu = true;
-
+volatile bool Menu = true;
+bool debug = false;
 uint32_t delay_time = 10000;
 uint32_t act_time = 0;
 uint32_t old_time =0;
@@ -91,7 +91,7 @@ uint32_t old_time =0;
 // Checks if motion was detected, sets LED HIGH and starts a timer
 IRAM_ATTR void activate_menu() {
   Menu = !Menu;
-    if (Menu){
+    if (Menu){      
     Serial.println("Menü aktiviert");
   }
   else{
@@ -101,24 +101,18 @@ IRAM_ATTR void activate_menu() {
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(115200);
 
+  Serial.begin(115200);
+//******************OLED
   Serial.println("128x64 OLED FeatherWing test");
   delay(250);                 // wait for the OLED to power up
   display.begin(0x3C, true);  // Address 0x3C default
-
   Serial.println("OLED begun");
-
   // Show image buffer on the display hardware.
   // Since the buffer is intialized with an Adafruit splashscreen
   // internally, this will display the splashscreen.
   display.display();
   delay(1000);
-  
-
-//
-// btn A,B ;C int komm geht  -- millis k millis geht  Btn event short long
-// set bit isr zur bearbeitung in loop
 
   pinMode(BUTTON_A, INPUT_PULLUP);
   pinMode(BUTTON_B, INPUT_PULLUP);
@@ -132,7 +126,8 @@ void setup() {
   display.setTextColor(SH110X_WHITE);
   display.setCursor(0, 0);
   display.println(F("BME280 test"));
-
+  
+//******************BME280
   unsigned status;
 
   // default settings
@@ -150,11 +145,9 @@ void setup() {
     while (1) delay(10);
   }
   Serial.println("-- Default Test --");
-  delayTime = 60000;
-
   Serial.println();
 
-  //  FRAM
+//******************  FRAM
   Wire.begin();
   Serial.println(__FILE__);
   Serial.print("FRAM_LIB_VERSION: ");
@@ -167,7 +160,7 @@ void setup() {
   }
 
 
-  //read back written Values
+//read back written Values
   uint16_t address = fram.read16(100);
   Serial.println(address);
   if (address == 0) {
@@ -187,28 +180,53 @@ void setup() {
     }
   }
     
-  // Interrupt Menu aktivieren deaktivieren
+// Interrupt Menu aktivieren deaktivieren
   attachInterrupt(digitalPinToInterrupt(BUTTON_C), activate_menu, RISING);  
 }
 
 void loop() {
   while (Menu){
-     Serial.print("Menü");  
+  display.clearDisplay();
+  display.display(); 
+    
+  menuehandling();
+ 
   }  
-  //if(!digitalRead(BUTTON_A)) Serial.print("A");
-  //if(!digitalRead(BUTTON_B)) Serial.print("B");
-  //if(!digitalRead(BUTTON_C)) Serial.print("C");  
-  //delay(delayTime);
+  //if(!digitalRead(BUTTON_A)) Serial.print("A");  
+//****************** nonblocking delay
   act_time = millis();
   if (act_time - old_time >= delay_time){
     old_time = act_time;
     Serial.print(act_time);  
     getvalues(feld);     // Values holen
     printValues(feld);   // Values ausgeben
-    FRAM_storage(feld);  // Values speichern
-    
+    FRAM_storage(feld);  // Values speichern    
   }
+}
 
+void menuehandling(void) {
+  int  i = 8;
+  //char array ["  Menueitem 0",Menueitem 0,Menueitem 0,,Menueitem Menueitem 0"]
+  while (Menu){
+    display.setRotation(1);
+    display.setTextSize(1);
+    display.setTextColor(SH110X_WHITE);
+    display.setCursor(0, 0);
+    display.println(F("   select Button B    ")); 
+    display.display();
+    while (!digitalRead(BUTTON_B)){
+      delay(200);  
+      i=i+8;      
+      if (i >= 40) i = 8 ;  
+      Serial.println(i);   
+      display.clearDisplay();
+      display.display(); 
+      display.setCursor(0,i);
+      display.print("> ");
+      display.print(i);      
+      display.display();           
+    }  
+  }    
 }
 
 void getvalues(float feld[]) {
@@ -225,22 +243,18 @@ void getvalues(float feld[]) {
 void printValues(float feld[]) {
 //Serial Monitor
   Serial.print("Temperature = ");
-  //Serial.print(bme.readTemperature());
   Serial.print(feld[0]);
   Serial.println(" °C");
 
   Serial.print("Pressure = ");
-  //Serial.print(bme.readPressure() / 100.0F);
   Serial.print(feld[1]);
   Serial.println(" hPa");
 
   Serial.print("Approx. Altitude = ");
-  //Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
   Serial.print(feld[2]);
   Serial.println(" m");
 
   Serial.print("Humidity = ");
-  //Serial.print(bme.readHumidity());
   Serial.print(feld[3]);
   Serial.println(" %");
   Serial.println();
@@ -279,33 +293,22 @@ void FRAM_storage(float feld[]) {
   //     URL: https://github.com/RobTillaart/FRAM_I2C
   //
   // experimental
-
   
   //  FILL AND WRITE 10 FLOATS
   
   uint16_t address = fram.read16(100);
-  //Serial.println(address);
+  if (debug) Serial.println(address);
 
   if (address == 0) address = 100;
-  //Serial.println(address);
+  if (debug) Serial.println(address);
 
   for (int i = 0; i < 4; i++) {
-    //Serial.println(feld[i], 5);
+    if (debug) Serial.println(feld[i], 5);
     address = fram.writeObject(address, feld[i]);
-    //Serial.println(address);
+    if (debug) Serial.println(address);
   }
   Serial.println(address);
   fram.write16(100, address);
 
-
-  //  READ BACK 10 FLOATS
-  // address = 100;
-  // for (int i = 0; i < 10; i++)
-  // {
-  //   address = fram.readObject(address, x[i]);
-  //   Serial.println(x[i], 5);
-  // }
-  // Serial.println();
-  // Serial.println("done...");
 }
 
