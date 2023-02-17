@@ -82,9 +82,14 @@ float x[10];
 
 float feld[4];
 float temp;
+// String Items[4] =  {"Menuitem 1","Menuitem 2","Menuitem 3","Menuitem 4"};
+// int*  ptr;
+// ptr = &Items;
+
 volatile bool Menu = true;
-bool debug = false;
-uint32_t delay_time = 10000;
+volatile bool debug = false;
+volatile int action = 0;
+uint32_t delay_time = 60000;
 uint32_t act_time = 0;
 uint32_t old_time =0;
 
@@ -159,8 +164,91 @@ void setup() {
     Serial.println(rv);
   }
 
+// Interrupt Menu aktivieren deaktivieren
+  attachInterrupt(digitalPinToInterrupt(BUTTON_C), activate_menu, RISING);  
+}
+
+void loop() {
+  while (Menu){
+  display.clearDisplay();
+  display.display();     
+  menuehandling(); 
+  }  
+  //Serial.println(action);
+  switch (action) {
+  case 8:
+    measure();
+    break;
+  case 16:
+    readback();
+    menuehandling();
+    break;
+  case 24:
+    clearFRAM();        
+    menuehandling(); 
+   break;
+  default:
+    // statements
+    break;
+  }
+}
+
+void measure (void) {
+    //if(!digitalRead(BUTTON_A)) Serial.print("A");  
+//****************** nonblocking delay
+  act_time = millis();
+  if (act_time - old_time >= delay_time){
+    old_time = act_time;
+    Serial.print(act_time);  
+    getvalues(feld);     // Values holen
+    printValues(feld);   // Values ausgeben
+    FRAM_storage(feld);  // Values speichern  
+  }
+}
+
+void menuehandling(void) {
+  int  i = 8;
+  int j=0;    
+  String Items[5] =  {"  Messung Starten","  FRAM readback","  FRAM loeschen","  Menuitem 3","  Menuitem 4"};
+  while (Menu){
+    display.setRotation(1);
+    display.setTextSize(1);
+    display.setTextColor(SH110X_WHITE);
+    display.setCursor(0, 0);
+    display.println(F("select with Button B")); 
+    for (j = 0;j <= 4 ;j++){
+      display.println(Items[j]);
+      }
+    display.display();
+    while (!digitalRead(BUTTON_B)){
+      delay(200);
+      i=i+8;      
+      if (i >= 48) i = 8 ;  
+      Serial.println(i);   
+      display.clearDisplay();
+      display.display(); 
+      display.setCursor(0,8);
+      for (j = 0;j <= 4 ;j++){
+         display.println(Items[j]);
+         }
+      display.setCursor(0,i);
+      display.print("> ");
+      //display.print(i);      
+      display.display();           
+    }  
+    while(!digitalRead(BUTTON_A)){
+      delay(200);
+      action = i;      
+    }  
+  }    
+}
+
+
+
+
 
 //read back written Values
+void readback (void) {
   uint16_t address = fram.read16(100);
   Serial.println(address);
   if (address == 0) {
@@ -179,54 +267,27 @@ void setup() {
       Serial.println();
     }
   }
-    
-// Interrupt Menu aktivieren deaktivieren
-  attachInterrupt(digitalPinToInterrupt(BUTTON_C), activate_menu, RISING);  
 }
 
-void loop() {
-  while (Menu){
-  display.clearDisplay();
-  display.display(); 
-    
-  menuehandling();
- 
-  }  
-  //if(!digitalRead(BUTTON_A)) Serial.print("A");  
-//****************** nonblocking delay
-  act_time = millis();
-  if (act_time - old_time >= delay_time){
-    old_time = act_time;
-    Serial.print(act_time);  
-    getvalues(feld);     // Values holen
-    printValues(feld);   // Values ausgeben
-    FRAM_storage(feld);  // Values speichern    
+void clearFRAM (void) {
+  uint16_t address = fram.read16(100);
+  Serial.println(address);
+  if (address == 0) {
+    Serial.println("nothing to delete...");
+  } 
+  else {
+    for (int i = 0; i < 4; i++) {  
+        feld[i] = 0;
+    }               
+    r = 100;
+    while (r < address) {            
+      for (int i = 0; i < 4; i++) {
+        address = fram.writeObject(address, feld[i]);
+      }
+    }
+    fram.write16(100, 0);
+   Serial.println("FRAM gelöscht") ;
   }
-}
-
-void menuehandling(void) {
-  int  i = 8;
-  //char array ["  Menueitem 0",Menueitem 0,Menueitem 0,,Menueitem Menueitem 0"]
-  while (Menu){
-    display.setRotation(1);
-    display.setTextSize(1);
-    display.setTextColor(SH110X_WHITE);
-    display.setCursor(0, 0);
-    display.println(F("   select Button B    ")); 
-    display.display();
-    while (!digitalRead(BUTTON_B)){
-      delay(200);  
-      i=i+8;      
-      if (i >= 40) i = 8 ;  
-      Serial.println(i);   
-      display.clearDisplay();
-      display.display(); 
-      display.setCursor(0,i);
-      display.print("> ");
-      display.print(i);      
-      display.display();           
-    }  
-  }    
 }
 
 void getvalues(float feld[]) {
