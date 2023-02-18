@@ -80,7 +80,7 @@ uint32_t sizeInBytes = 0;
 uint16_t r;
 float x[10];
 
-float feld[4];
+float feld[3];
 float temp;
 // String Items[4] =  {"Menuitem 1","Menuitem 2","Menuitem 3","Menuitem 4"};
 // int*  ptr;
@@ -250,7 +250,7 @@ void menuehandling(void) {
 //read back written Values
 void readback (void) {
   uint16_t address = fram.read16(100);
-  Serial.println(address);
+  //Serial.println(address);
   if (address == 0) {
     Serial.println("nothing to print...");
   } 
@@ -259,7 +259,7 @@ void readback (void) {
     while (r < address) {            
       Serial.print(r);
       Serial.print(" ");      
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < 3; i++) {
         r = fram.readObject(r, feld[i]);
         Serial.print(feld[i]);
         Serial.print(";");
@@ -276,12 +276,12 @@ void clearFRAM (void) {
     Serial.println("nothing to delete...");
   } 
   else {
-    for (int i = 0; i < 4; i++) {  
+    for (int i = 0; i < 3; i++) {  
         feld[i] = 0.0;
     }               
     r = 100;
     while (r < address) {            
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < 3; i++) {
         //address = fram.writeObject(address, feld[i]);
         r = fram.writeObject(r, feld[i]);        
       }
@@ -298,8 +298,8 @@ void getvalues(float feld[]) {
   temp = bme.readHumidity();  
   feld[0] = bme.readTemperature();
   feld[1] = bme.readPressure() / 100.0F;
-  feld[2] = bme.readAltitude(SEALEVELPRESSURE_HPA);
-  feld[3] = bme.readHumidity();
+  //feld[2] = bme.readAltitude(SEALEVELPRESSURE_HPA);
+  feld[2] = bme.readHumidity();
 }
 
 void printValues(float feld[]) {
@@ -312,12 +312,12 @@ void printValues(float feld[]) {
   Serial.print(feld[1]);
   Serial.println(" hPa");
 
-  Serial.print("Approx. Altitude = ");
-  Serial.print(feld[2]);
-  Serial.println(" m");
+  // Serial.print("Approx. Altitude = ");
+  // Serial.print(feld[2]);
+  // Serial.println(" m");
 
   Serial.print("Humidity = ");
-  Serial.print(feld[3]);
+  Serial.print(feld[2]);
   Serial.println(" %");
   Serial.println();
 
@@ -336,12 +336,12 @@ void printValues(float feld[]) {
   display.print(feld[1]);
   display.println(" hPa");
 
-  display.print("Hoehe      = ");
-  display.print(feld[2]);
-  display.println(" m");
+  // display.print("Hoehe      = ");
+  // display.print(feld[2]);
+  // display.println(" m");
 
   display.print("rel.Feuchte= ");
-  display.print(feld[3]);
+  display.print(feld[2]);
   display.println(" %");
 
   display.display();
@@ -364,7 +364,7 @@ void FRAM_storage(float feld[]) {
   if (address == 0) address = 100;
   if (debug) Serial.println(address);
 
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 3; i++) {
     if (debug) Serial.println(feld[i], 5);
     address = fram.writeObject(address, feld[i]);
     if (debug) Serial.println(address);
