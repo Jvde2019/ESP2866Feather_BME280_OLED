@@ -181,11 +181,13 @@ void loop() {
     break;
   case 16:
     readback();
-    menuehandling();
+    Menu = true;
+    //menuehandling();
     break;
   case 24:
-    clearFRAM();        
-    menuehandling(); 
+    clearFRAM();  
+    Menu = true;      
+    //menuehandling(); 
    break;
   default:
     // statements
@@ -199,7 +201,7 @@ void measure (void) {
   act_time = millis();
   if (act_time - old_time >= delay_time){
     old_time = act_time;
-    Serial.print(act_time);  
+    //Serial.print(act_time);  
     getvalues(feld);     // Values holen
     printValues(feld);   // Values ausgeben
     FRAM_storage(feld);  // Values speichern  
@@ -209,7 +211,7 @@ void measure (void) {
 void menuehandling(void) {
   int  i = 8;
   int j=0;    
-  String Items[5] =  {"  Messung Starten","  FRAM readback","  FRAM loeschen","  Menuitem 3","  Menuitem 4"};
+  String Items[5] =  {"  Messung starten","  FRAM readback","  FRAM loeschen","  Menuitem 3","  Menuitem 4"};
   while (Menu){
     display.setRotation(1);
     display.setTextSize(1);
@@ -218,7 +220,9 @@ void menuehandling(void) {
     display.println(F("select with Button B")); 
     for (j = 0;j <= 4 ;j++){
       display.println(Items[j]);
-      }
+      }           
+    display.setCursor(0,i);
+    display.print("> ");    
     display.display();
     while (!digitalRead(BUTTON_B)){
       delay(200);
@@ -242,10 +246,6 @@ void menuehandling(void) {
     }  
   }    
 }
-
-
-
-
 
 //read back written Values
 void readback (void) {
@@ -277,12 +277,13 @@ void clearFRAM (void) {
   } 
   else {
     for (int i = 0; i < 4; i++) {  
-        feld[i] = 0;
+        feld[i] = 0.0;
     }               
     r = 100;
     while (r < address) {            
       for (int i = 0; i < 4; i++) {
-        address = fram.writeObject(address, feld[i]);
+        //address = fram.writeObject(address, feld[i]);
+        r = fram.writeObject(r, feld[i]);        
       }
     }
     fram.write16(100, 0);
