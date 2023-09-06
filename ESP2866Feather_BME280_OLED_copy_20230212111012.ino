@@ -82,9 +82,6 @@ float x[10];
 
 float feld[3];
 float temp;
-// String Items[4] =  {"Menuitem 1","Menuitem 2","Menuitem 3","Menuitem 4"};
-// int*  ptr;
-// ptr = &Items;
 
 volatile bool Menu = true;
 volatile bool debug = false;
@@ -174,7 +171,6 @@ void loop() {
   display.display();     
   menuehandling(); 
   }  
-  //Serial.println(action);
   switch (action) {
   case 8:
     measure();
@@ -182,13 +178,11 @@ void loop() {
   case 16:
     readback();
     Menu = true;
-    //menuehandling();
     break;
   case 24:
     clearFRAM();  
     Menu = true;      
-    //menuehandling(); 
-   break;
+    break;
   default:
     // statements
     break;
@@ -196,12 +190,10 @@ void loop() {
 }
 
 void measure (void) {
-    //if(!digitalRead(BUTTON_A)) Serial.print("A");  
 //****************** nonblocking delay
   act_time = millis();
   if (act_time - old_time >= delay_time){
     old_time = act_time;
-    //Serial.print(act_time);  
     getvalues(feld);     // Values holen
     printValues(feld);   // Values ausgeben
     FRAM_storage(feld);  // Values speichern  
@@ -282,7 +274,6 @@ void clearFRAM (void) {
     r = 100;
     while (r < address) {            
       for (int i = 0; i < 3; i++) {
-        //address = fram.writeObject(address, feld[i]);
         r = fram.writeObject(r, feld[i]);        
       }
     }
@@ -326,6 +317,7 @@ void printValues(float feld[]) {
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SH110X_WHITE);
+//  display.setTextColor(SH110X_BLACK);
   display.setCursor(0, 0);
 
   display.print("Temperatur = ");
@@ -355,9 +347,7 @@ void FRAM_storage(float feld[]) {
   //     URL: https://github.com/RobTillaart/FRAM_I2C
   //
   // experimental
-  
-  //  FILL AND WRITE 10 FLOATS
-  
+   
   uint16_t address = fram.read16(100);
   if (debug) Serial.println(address);
 
@@ -371,6 +361,5 @@ void FRAM_storage(float feld[]) {
   }
   Serial.println(address);
   fram.write16(100, address);
-
 }
 
